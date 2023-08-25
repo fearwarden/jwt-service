@@ -36,6 +36,9 @@ public class User implements UserDetails {
     @Column(columnDefinition = "varchar(255) default 'USER'")
     private Role role = Role.USER;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Token token;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));

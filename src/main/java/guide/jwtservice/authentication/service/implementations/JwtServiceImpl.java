@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,6 +72,19 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public boolean isTokenExpired(String token) {
         return this.extractExpiration(token).before(new Date());
+    }
+
+    /**
+     * Generate a new refresh token.
+     *
+     * @return the refresh token.
+     */
+    @Override
+    public String generateRefreshToken() {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] randomBytes = new byte[32];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
     // ------------------------------------------

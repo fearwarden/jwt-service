@@ -1,11 +1,15 @@
 package guide.jwtservice.authentication.service.implementations;
 
+import guide.jwtservice.authentication.dto.response.LoginResponse;
+import guide.jwtservice.authentication.exceptions.throwables.RefreshTokenNotFoundException;
 import guide.jwtservice.authentication.service.AuthService;
 import guide.jwtservice.authentication.service.JwtService;
 import guide.jwtservice.users.exceptions.throwables.PasswordDidNotMatchException;
 import guide.jwtservice.users.exceptions.throwables.UserExistException;
 import guide.jwtservice.users.exceptions.throwables.UserNotFoundException;
+import guide.jwtservice.users.models.Token;
 import guide.jwtservice.users.models.User;
+import guide.jwtservice.users.repositories.TokenRepository;
 import guide.jwtservice.users.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +24,7 @@ import java.util.Optional;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -46,15 +51,40 @@ public class AuthServiceImpl implements AuthService {
         user.setLastName(lastName);
         user.setPassword(this.passwordEncoder.encode(password));
         this.userRepository.save(user);
+
+        Token refreshToken = new Token();
+        refreshToken.setRefreshToken(this.jwtService.generateRefreshToken());
+        refreshToken.setUser(user);
+        this.tokenRepository.save(refreshToken);
     }
 
     @Override
-    public String login(String email, String password) {
+    public LoginResponse login(String email, String password) {
         // Attempt to authenticate the user using Spring Security's AuthenticationManager with the given email and password.
         this.authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
         User user = this.userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
-        return this.jwtService.generateToken(user);
+        String accessToken = this.jwtService.generateToken(user);
+        Token token = this.tokenRepository.findByUser(user);
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setAccessToken(accessToken);
+        loginResponse.setRefreshToken(token.getRefreshToken());
+        return loginResponse;
+    }
+
+    @Override
+    public LoginResponse refresh(String refreshToken) {
+        Token token = this.tokenRepository.findByRefreshToken(refreshToken).orElseThrow(RefreshTokenNotFoundException::new);
+
+        String accessToken = this.jwtService.generateToken(token.getUser());
+        String newRefreshToken = this.jwtService.generateRefreshToken();
+        token.setRefreshToken(newRefreshToken);
+        this.tokenRepository.save(token);
+
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setRefreshToken(newRefreshToken);
+        loginResponse.setAccessToken(accessToken);
+        return loginResponse;
     }
 }

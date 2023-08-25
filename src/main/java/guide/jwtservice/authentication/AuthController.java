@@ -1,7 +1,9 @@
 package guide.jwtservice.authentication;
 
 import guide.jwtservice.authentication.dto.request.LoginDto;
+import guide.jwtservice.authentication.dto.request.RefreshDto;
 import guide.jwtservice.authentication.dto.request.RegisterDto;
+import guide.jwtservice.authentication.dto.response.LoginResponse;
 import guide.jwtservice.authentication.service.AuthService;
 import guide.jwtservice.utils.HttpResponse;
 import lombok.Data;
@@ -22,8 +24,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public HttpResponse<String> login(@RequestBody @Validated LoginDto body) {
-        String jwt = this.authService.login(body.getEmail(), body.getPassword());
-        return new HttpResponse<>(true, "User successfully logged in.", jwt);
+    public HttpResponse<LoginResponse> login(@RequestBody @Validated LoginDto body) {
+        LoginResponse tokens = this.authService.login(body.getEmail(), body.getPassword());
+        return new HttpResponse<>(true, "User successfully logged in.", tokens);
+    }
+
+    @PostMapping("/refresh")
+    public HttpResponse<LoginResponse> refresh(@RequestBody @Validated RefreshDto body) {
+        LoginResponse tokens = this.authService.refresh(body.getRefreshToken());
+        return new HttpResponse<>(true, "Access token successfully generated.", tokens);
     }
 }
