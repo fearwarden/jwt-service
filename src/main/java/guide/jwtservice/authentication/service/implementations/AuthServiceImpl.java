@@ -1,6 +1,6 @@
 package guide.jwtservice.authentication.service.implementations;
 
-import guide.jwtservice.authentication.dto.response.LoginResponse;
+import guide.jwtservice.authentication.dto.response.TokensResponse;
 import guide.jwtservice.authentication.exceptions.throwables.RefreshTokenNotFoundException;
 import guide.jwtservice.authentication.service.AuthService;
 import guide.jwtservice.authentication.service.JwtService;
@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse login(String email, String password) {
+    public TokensResponse login(String email, String password) {
         // Attempt to authenticate the user using Spring Security's AuthenticationManager with the given email and password.
         this.authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
@@ -67,14 +67,14 @@ public class AuthServiceImpl implements AuthService {
         User user = this.userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
         String accessToken = this.jwtService.generateToken(user);
         Token token = this.tokenRepository.findByUser(user);
-        LoginResponse loginResponse = new LoginResponse();
+        TokensResponse loginResponse = new TokensResponse();
         loginResponse.setAccessToken(accessToken);
         loginResponse.setRefreshToken(token.getRefreshToken());
         return loginResponse;
     }
 
     @Override
-    public LoginResponse refresh(String refreshToken) {
+    public TokensResponse refresh(String refreshToken) {
         Token token = this.tokenRepository.findByRefreshToken(refreshToken).orElseThrow(RefreshTokenNotFoundException::new);
 
         String accessToken = this.jwtService.generateToken(token.getUser());
@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
         token.setRefreshToken(newRefreshToken);
         this.tokenRepository.save(token);
 
-        LoginResponse loginResponse = new LoginResponse();
+        TokensResponse loginResponse = new TokensResponse();
         loginResponse.setRefreshToken(newRefreshToken);
         loginResponse.setAccessToken(accessToken);
         return loginResponse;

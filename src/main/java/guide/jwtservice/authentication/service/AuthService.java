@@ -1,9 +1,9 @@
 package guide.jwtservice.authentication.service;
 
-import guide.jwtservice.authentication.dto.response.LoginResponse;
+import guide.jwtservice.authentication.dto.response.TokensResponse;
 
 public interface AuthService {
     void register(String email, String password, String confirmationPassword, String firstName, String lastName);
-    LoginResponse login(String email, String password);
-    LoginResponse refresh(String refreshToken);
+    TokensResponse login(String email, String password);
+    TokensResponse refresh(String refreshToken);
 }
