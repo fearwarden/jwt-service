@@ -82,9 +82,9 @@ public class AuthServiceImpl implements AuthService {
         token.setRefreshToken(newRefreshToken);
         this.tokenRepository.save(token);
 
-        TokensResponse loginResponse = new TokensResponse();
-        loginResponse.setRefreshToken(newRefreshToken);
-        loginResponse.setAccessToken(accessToken);
-        return loginResponse;
+        TokensResponse tokensResponse = new TokensResponse();
+        tokensResponse.setRefreshToken(newRefreshToken);
+        tokensResponse.setAccessToken(accessToken);
+        return tokensResponse;
     }
 }
